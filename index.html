@@ -442,20 +442,64 @@ ${p.desc?`<p>${esc(p.desc)}</p>`:''}
 
 <hr>
 
-<a class="btn"
-target="_blank"
-rel="noopener"
-href="https://wa.me/${WA}?text=${encodeURIComponent('Olá! Tenho interesse no piso referência '+p.ref+' ('+p.name+'). Pode me dar mais informações?')}">
-Consultar pelo WhatsApp
-</a>
+<div class="field" style="margin:16px 0 8px">
+<label for="boxQty">Quantidade de caixas</label>
+<input id="boxQty" type="number" min="1" step="1" value="1" oninput="updateOrderPreview('${p.id}')">
+</div>
+<div id="orderPreview" class="panel" style="margin:8px 0;background:#f4f7f4">
+</div>
+<button class="btn" type="button" style="width:100%" onclick="sendWhatsAppOrder('${p.id}')">
+Enviar pedido pelo WhatsApp
+</button>
 
 </div>
 </div>
 `;
 
 show('detail');
+updateOrderPreview(id);
 
 }
+
+window.updateOrderPreview=id=>{
+const p=products.find(x=>String(x.id)===String(id));
+if(!p)return;
+const input=$('boxQty');
+if(!input)return;
+const qty=Math.max(1,Math.floor(Number(input.value)||1));
+input.value=qty;
+const totalM2=qty*Number(p.boxm2||0);
+const totalCash=totalM2*Number(p.cash||0);
+const totalCard=p.card?totalM2*Number(p.card):null;
+$('orderPreview').innerHTML=
+'<b>Resumo do pedido</b>'+
+'<div class="note" style="margin-top:6px">'+qty+' caixa(s) • '+totalM2.toLocaleString('pt-BR',{maximumFractionDigits:2})+' m² no total</div>'+
+'<div style="font-weight:800;color:var(--green);margin-top:6px">À vista: '+money(totalCash)+'</div>'+
+(totalCard!==null?'<div class="note">No cartão: '+money(totalCard)+'</div>':'')+
+'<div class="note">Valor estimado, sujeito à confirmação da loja.</div>';
+};
+
+window.sendWhatsAppOrder=id=>{
+const p=products.find(x=>String(x.id)===String(id));
+if(!p)return;
+const qty=Math.max(1,Math.floor(Number($('boxQty').value)||1));
+const totalM2=qty*Number(p.boxm2||0);
+const totalCash=totalM2*Number(p.cash||0);
+const totalCard=p.card?totalM2*Number(p.card):null;
+const msg=[
+'Olá! Gostaria de fazer um pedido pelo catálogo do Depósito do Armandinho:',
+'Produto: '+p.name,
+'Referência: '+p.ref,
+'Tamanho: '+(p.size||'não informado'),
+'Quantidade: '+qty+' caixa(s)',
+'Metragem por caixa: '+Number(p.boxm2).toLocaleString('pt-BR')+' m²',
+'Metragem total: '+totalM2.toLocaleString('pt-BR')+' m²',
+'Valor estimado à vista: '+money(totalCash),
+...(totalCard!==null?['Valor estimado no cartão: '+money(totalCard)]:[]),
+'Por favor, confirme disponibilidade e valor final.'
+].join('\n');
+window.open('https://wa.me/'+WA+'?text='+encodeURIComponent(msg),'_blank');
+};
 
 /* ADMINISTRAÇÃO */
 
