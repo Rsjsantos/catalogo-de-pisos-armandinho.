@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#173b32">
+<title>Catálogo de Pisos | Depósito do Armandinho</title>
+<style>
+:root{--green:#173b32;--green2:#245747;--gold:#e4b64e;--bg:#f4f5f2;--ink:#202722;--muted:#66716b;--white:#fff;--line:#e2e7e2}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Arial}
+header{background:var(--green);color:white;padding:22px 16px 18px}header .wrap,main{max-width:1050px;margin:auto}
+.brand{display:flex;align-items:center;gap:12px}.logo{width:48px;height:48px;border-radius:14px;background:var(--gold);color:#26352d;display:grid;place-items:center;font-weight:900;font-size:19px}
+h1{font-size:22px;margin:0}header p{margin:4px 0 0;color:#d8e5df;font-size:14px}
+main{padding:20px 14px 60px}.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}
+input,select,textarea,button{font:inherit}input,select,textarea{width:100%;border:1px solid #d6ddd7;border-radius:10px;padding:12px;background:white;color:var(--ink)}
+.search{flex:1;min-width:190px}button,.btn{border:0;border-radius:10px;background:var(--green2);color:white;padding:11px 15px;font-weight:700;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:7px}
+button.secondary,.btn.secondary{background:#e7ede8;color:var(--green)}button.gold{background:var(--gold);color:#24352d}button.danger{background:#a83c32}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:15px}
+.card{background:white;border:1px solid var(--line);border-radius:15px;overflow:hidden;box-shadow:0 2px 8px #152b1c0a}
+.photo{height:180px;background:#e8ede9;display:grid;place-items:center;color:#849087;font-size:14px;overflow:hidden}
+.photo img{width:100%;height:100%;object-fit:cover}.cardbody{padding:14px}.ref{color:var(--muted);font-size:12px;font-weight:700;letter-spacing:.04em}
+.card h3{font-size:17px;margin:5px 0}.price{font-size:21px;font-weight:850;color:var(--green);margin:9px 0 2px}.sub{font-size:13px;color:var(--muted)}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.actions button,.actions a{flex:1;font-size:14px}
+.empty{text-align:center;background:white;padding:35px;border-radius:14px;color:var(--muted)}
+.panel{background:white;border:1px solid var(--line);border-radius:15px;padding:18px;margin:15px 0}
+.hidden{display:none!important}.formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.field label{display:block;font-weight:700;font-size:13px;margin:0 0 5px}.field.full{grid-column:1/-1}
+.note{font-size:13px;color:var(--muted)}.adminhead{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.productview{max-width:600px;margin:10px auto}.productview .photo{height:280px;border-radius:13px}
+.productview .panel{padding:20px}.bigprice{font-size:28px;font-weight:900;color:var(--green)}
+.qrlist{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
+.qritem{background:white;border:1px solid var(--line);padding:12px;border-radius:12px;text-align:center;break-inside:avoid}
+.qritem canvas,.qritem img{display:block;margin:8px auto;max-width:130px}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
+hr{border:0;border-top:1px solid var(--line);margin:18px 0}
+@media(max-width:560px){.formgrid{grid-template-columns:1fr}.field.full{grid-column:auto}h1{font-size:19px}.photo{height:160px}}
+@media print{header,.toolbar,.no-print,footer{display:none!important}body{background:white}.qrlist{grid-template-columns:repeat(3,1fr)}.qritem{border:1px solid #aaa}}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+ <div class="brand"><div class="logo">DA</div><div><h1>Depósito do Armandinho</h1><p>Catálogo digital de pisos e revestimentos</p></div></div>
+</div></header>
+<main>
+<section id="catalog">
+ <div class="toolbar">
+  <input id="search" class="search" placeholder="Buscar por piso ou referência..." aria-label="Buscar produtos">
+  <button class="secondary" id="adminBtn">Área administrativa</button>
+ </div>
+ <div id="cards" class="grid"></div>
+</section>
+
+<section id="detail" class="hidden"></section>
+
+<section id="admin" class="hidden">
+ <div class="panel">
+  <div class="adminhead"><div><h2 style="margin:0">Área administrativa</h2><div class="note">Cadastre produtos, atualize valores e gere etiquetas QR Code.</div></div><button class="secondary" id="backBtn">Voltar ao catálogo</button></div>
+  <div id="login">
+   <hr><div class="field" style="max-width:360px"><label for="pin">Senha administrativa</label><input id="pin" type="password" inputmode="numeric" placeholder="Senha"></div>
+   <div class="actions"><button id="loginBtn">Entrar</button></div>
+   <p class="note">Senha inicial: <b>1234</b>. Altere-a depois de entrar.</p>
+  </div>
+  <div id="adminArea" class="hidden">
+   <hr><h3 id="formTitle">Cadastrar piso</h3>
+   <form id="productForm">
+    <input type="hidden" id="pid">
+    <div class="formgrid">
+     <div class="field"><label for="name">Nome do piso *</label><input id="name" required placeholder="Ex.: Piso acetinado"></div>
+     <div class="field"><label for="ref">Referência *</label><input id="ref" required placeholder="Ex.: 67040"></div>
+     <div class="field"><label for="size">Tamanho</label><input id="size" placeholder="Ex.: 60 x 60 cm"></div>
+     <div class="field"><label for="boxm2">m² por caixa *</label><input id="boxm2" required type="number" min="0.01" step="0.01" placeholder="Ex.: 2.20"></div>
+     <div class="field"><label for="cash">Preço por m² à vista (R$) *</label><input id="cash" required type="number" min="0" step="0.01" placeholder="Ex.: 29.90"></div>
+     <div class="field"><label for="card">Preço por m² no cartão (R$)</label><input id="card" type="number" min="0" step="0.01" placeholder="Opcional"></div>
+     <div class="field full"><label for="photo">Foto do piso</label><input id="photo" type="file" accept="image/*"><div class="note">Use uma foto nítida do produto. Imagens grandes podem ocupar espaço no aparelho.</div></div>
+     <div class="field full"><label for="desc">Observações</label><textarea id="desc" rows="2" placeholder="Acabamento, marca ou outras informações"></textarea></div>
+    </div>
+    <div class="actions"><button type="submit">Salvar piso</button><button type="button" class="secondary" id="clearBtn">Limpar</button></div>
+   </form>
+   <hr><div class="adminhead"><h3 style="margin:0">Produtos cadastrados</h3><div class="actions"><button class="gold" id="printQrBtn">Imprimir QR Codes</button><button class="secondary" id="exportBtn">Exportar backup</button><label class="btn secondary" for="importFile">Importar backup</label><input id="importFile" type="file" accept="application/json" class="hidden"></div></div>
+   <div id="adminProducts"></div>
+   <hr><h3>Alterar senha</h3><div class="formgrid"><div class="field"><label for="newPin">Nova senha (mínimo 4 caracteres)</label><input id="newPin" type="password"></div></div><div class="actions"><button id="changePinBtn">Alterar senha</button><button class="danger" id="logoutBtn">Sair da administração</button></div>
+   <p class="note"><b>Importante:</b> esta versão guarda produtos e senha somente neste navegador/aparelho. Para que alterações apareçam automaticamente nos celulares de todos os clientes, será necessário conectar um banco de dados online.</p>
+  </div>
+ </div>
+ <div id="qrPrint" class="hidden"><h2>QR Codes — Depósito do Armandinho</h2><div id="qrList" class="qrlist"></div></div>
+</section>
+</main>
+<footer>Depósito do Armandinho • Consulte disponibilidade e condições pelo WhatsApp.</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+const WA='5571981175349', KEY='armandinho_pisos_v1', PINKEY='armandinho_admin_pin';
+const $=id=>document.getElementById(id);
+let products=load(), photoData='', logged=false;
+function load(){try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){return []}}
+function save(){localStorage.setItem(KEY,JSON.stringify(products))}
+function money(v){return Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function siteUrl(id){let u=new URL(location.href);u.search='';u.hash='';u.searchParams.set('p',id);return u.href}
+function show(which){['catalog','detail','admin'].forEach(x=>$(x).classList.toggle('hidden',x!==which));window.scrollTo(0,0)}
+function render(){
+ const q=$('search').value.trim().toLowerCase();
+ const list=products.filter(p=>(p.name+' '+p.ref+' '+(p.size||'')).toLowerCase().includes(q));
+ $('cards').innerHTML=list.length?list.map(p=>`<article class="card"><div class="photo">${p.photo?`<img src="${p.photo}" alt="${esc(p.name)}">`:'Foto não cadastrada'}</div><div class="cardbody"><div class="ref">REF. ${esc(p.ref)}</div><h3>${esc(p.name)}</h3><div class="sub">${esc(p.size||'')} • ${Number(p.boxm2).toLocaleString('pt-BR')} m²/caixa</div><div class="price">${money(p.cash)}/m²</div><div class="sub">à vista${p.card?` • cartão: ${money(p.card)}/m²`:''}</div><div class="actions"><button onclick="openProduct('${p.id}')">Ver detalhes</button></div></div></article>`).join(''):'<div class="empty">Nenhum piso cadastrado ainda.</div>';
+}
+function openProduct(id){
+ const p=products.find(x=>x.id===id);if(!p)return;
+ $('detail').innerHTML=`<div class="productview"><button class="secondary no-print" onclick="show('catalog')">← Voltar ao catálogo</button><div class="panel"><div class="photo">${p.photo?`<img src="${p.photo}" alt="${esc(p.name)}">`:'Foto não cadastrada'}</div><div class="ref" style="margin-top:14px">REFERÊNCIA ${esc(p.ref)}</div><h2>${esc(p.name)}</h2><p class="sub">${esc(p.size||'Tamanho não informado')}</p><hr><div class="bigprice">${money(p.cash)} por m²</div><p>Preço à vista</p>${p.card?`<p><b>${money(p.card)}/m²</b> no cartão</p>`:''}<p><b>${Number(p.boxm2).toLocaleString('pt-BR')} m²</b> por caixa</p><p><b>Valor estimado da caixa:</b> ${money(p.cash*p.boxm2)} à vista</p>${p.card?`<p><b>Caixa no cartão:</b> ${money(p.card*p.boxm2)}</p>`:''}${p.desc?`<p>${esc(p.desc)}</p>`:''}<hr><a class="btn" target="_blank" rel="noopener" href="https://wa.me/${WA}?text=${encodeURIComponent('Olá! Tenho interesse no piso referência '+p.ref+' ('+p.name+'). Pode me dar mais informações?')}">Consultar pelo WhatsApp</a></div></div>`;
+ show('detail');
+}
+$('search').addEventListener('input',render);
+$('adminBtn').onclick=()=>{show('admin');$('login').classList.toggle('hidden',logged);$('adminArea').classList.toggle('hidden',!logged);};
+$('backBtn').onclick=()=>show('catalog');
+$('loginBtn').onclick=()=>{let pin=localStorage.getItem(PINKEY)||'1234';if($('pin').value===pin){logged=true;$('login').classList.add('hidden');$('adminArea').classList.remove('hidden');renderAdmin()}else alert('Senha incorreta.');};
+function clearForm(){$('productForm').reset();$('pid').value='';photoData='';$('formTitle').textContent='Cadastrar piso'}
+$('clearBtn').onclick=clearForm;
+$('photo').onchange=e=>{let f=e.target.files[0];if(!f)return;if(f.size>1500000){alert('Escolha uma imagem de até 1,5 MB.');e.target.value='';return}let r=new FileReader();r.onload=()=>photoData=r.result;r.readAsDataURL(f)};
+$('productForm').onsubmit=e=>{e.preventDefault();let id=$('pid').value||('p'+Date.now());let old=products.find(p=>p.id===id);let p={id,name:$('name').value.trim(),ref:$('ref').value.trim(),size:$('size').value.trim(),boxm2:Number($('boxm2').value),cash:Number($('cash').value),card:$('card').value?Number($('card').value):null,desc:$('desc').value.trim(),photo:photoData||(old?.photo||'')};let i=products.findIndex(x=>x.id===id);if(i>=0)products[i]=p;else products.push(p);save();clearForm();render();renderAdmin();alert('Piso salvo neste aparelho.');};
+function renderAdmin(){
+ $('adminProducts').innerHTML=products.length?products.map(p=>`<div class="panel"><div class="adminhead"><div><b>${esc(p.name)}</b><div class="note">Ref. ${esc(p.ref)} • ${money(p.cash)}/m² • ${p.boxm2} m²/caixa</div></div><div class="actions"><button class="secondary" onclick="editProduct('${p.id}')">Editar</button><button class="danger" onclick="deleteProduct('${p.id}')">Excluir</button></div></div></div>`).join(''):'<p class="note">Nenhum produto cadastrado.</p>';
+}
+window.editProduct=id=>{let p=products.find(x=>x.id===id);if(!p)return;$('pid').value=p.id;$('name').value=p.name;$('ref').value=p.ref;$('size').value=p.size||'';$('boxm2').value=p.boxm2;$('cash').value=p.cash;$('card').value=p.card||'';$('desc').value=p.desc||'';photoData=p.photo||'';$('formTitle').textContent='Editar piso';window.scrollTo(0,0)};
+window.deleteProduct=id=>{if(confirm('Excluir este piso?')){products=products.filter(p=>p.id!==id);save();render();renderAdmin()}};
+$('changePinBtn').onclick=()=>{let v=$('newPin').value;if(v.length<4){alert('A senha deve ter pelo menos 4 caracteres.');return}localStorage.setItem(PINKEY,v);$('newPin').value='';alert('Senha alterada neste aparelho.')};
+$('logoutBtn').onclick=()=>{logged=false;$('adminArea').classList.add('hidden');$('login').classList.remove('hidden');$('pin').value='';show('catalog')};
+$('exportBtn').onclick=()=>{let blob=new Blob([JSON.stringify(products,null,2)],{type:'application/json'});let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='backup-catalogo-armandinho.json';a.click();URL.revokeObjectURL(a.href)};
+$('importFile').onchange=e=>{let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{let data=JSON.parse(r.result);if(!Array.isArray(data))throw 0;products=data;save();render();renderAdmin();alert('Backup importado.')}catch(_){alert('Arquivo de backup inválido.')}};r.readAsText(f);e.target.value=''};
+$('printQrBtn').onclick=()=>{if(!products.length){alert('Cadastre ao menos um piso primeiro.');return}if(typeof QRCode==='undefined'){alert('Não foi possível carregar o gerador de QR Code. Verifique a internet e tente novamente.');return}$('qrList').innerHTML='';$('qrPrint').classList.remove('hidden');products.forEach(p=>{let el=document.createElement('div');el.className='qritem';el.innerHTML=`<b>${esc(p.name)}</b><div class="note">Referência ${esc(p.ref)}</div><div class="qrcode"></div><div class="note">Aponte a câmera para consultar</div>`;$('qrList').appendChild(el);new QRCode(el.querySelector('.qrcode'),{text:siteUrl(p.id),width:130,height:130});});setTimeout(()=>window.print(),700)};
+const params=new URLSearchParams(location.search), productId=params.get('p');
+if(productId&&products.some(p=>p.id===productId))openProduct(productId);else{show('catalog');render()}
+</script>
+</body></html>
