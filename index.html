@@ -19,6 +19,9 @@ h1{font-size:22px;margin:0}
 header p{margin:4px 0 0;color:#d8e5df;font-size:14px}
 main{padding:20px 14px 60px}
 .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}
+.cartitem{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+.cartqty{width:92px}
+.carttotal{font-size:20px;font-weight:900;color:var(--green)}
 input,select,textarea,button{font:inherit}
 input,select,textarea{width:100%;border:1px solid #d6ddd7;border-radius:10px;padding:12px;background:white;color:var(--ink)}
 .search{flex:1;min-width:190px}
@@ -89,12 +92,14 @@ body{background:white}
 <section id="catalog">
 <div class="toolbar">
 <input id="search" class="search" placeholder="Buscar por piso ou referência...">
+<button class="gold" id="cartBtn">Carrinho (<span id="cartCount">0</span>)</button>
 <button class="secondary" id="adminBtn">Área administrativa</button>
 </div>
 <div id="cards" class="grid"></div>
 </section>
 
 <section id="detail" class="hidden"></section>
+<section id="cart" class="hidden"></section>
 
 <section id="admin" class="hidden">
 
@@ -240,6 +245,7 @@ const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const $=id=>document.getElementById(id);
 
 let products=[];
+let cart=JSON.parse(localStorage.getItem('armandinho_cart')||'[]');
 let photoData='';
 let logged=false;
 
@@ -269,7 +275,7 @@ return u.href;
 }
 
 function show(which){
-['catalog','detail','admin'].forEach(x=>{
+['catalog','detail','cart','admin'].forEach(x=>{
 $(x).classList.toggle('hidden',x!==which);
 });
 window.scrollTo(0,0);
@@ -448,9 +454,11 @@ ${p.desc?`<p>${esc(p.desc)}</p>`:''}
 </div>
 <div id="orderPreview" class="panel" style="margin:8px 0;background:#f4f7f4">
 </div>
-<button class="btn" type="button" style="width:100%" onclick="sendWhatsAppOrder('${p.id}')">
-Enviar pedido pelo WhatsApp
-</button>
+<div class="actions" style="display:grid;grid-template-columns:1fr 1fr">
+<button class="gold" type="button" onclick="addToCart('${p.id}')">Adicionar ao carrinho</button>
+<button type="button" onclick="sendWhatsAppOrder('${p.id}')">Pedir só este piso</button>
+</div>
+<button class="secondary no-print" type="button" style="width:100%;margin-top:9px" onclick="showCart()">Ver carrinho</button>
 
 </div>
 </div>
@@ -478,6 +486,37 @@ $('orderPreview').innerHTML=
 (totalCard!==null?'<div class="note">No cartão: '+money(totalCard)+'</div>':'')+
 '<div class="note">Valor estimado, sujeito à confirmação da loja.</div>';
 };
+
+function saveCart(){localStorage.setItem('armandinho_cart',JSON.stringify(cart));updateCartCount();}
+function updateCartCount(){const el=$('cartCount');if(el)el.textContent=cart.reduce((n,x)=>n+Number(x.qty||0),0);}
+window.addToCart=id=>{const p=products.find(x=>String(x.id)===String(id));if(!p)return;const qty=Math.max(1,Math.floor(Number($('boxQty')?.value)||1));const old=cart.find(x=>String(x.id)===String(id));if(old)old.qty+=qty;else cart.push({id:p.id,qty});saveCart();alert(qty+' caixa(s) de '+p.name+' adicionada(s) ao carrinho.');};
+window.showCart=()=>{renderCart();show('cart');};
+window.changeCartQty=(id,value)=>{const item=cart.find(x=>String(x.id)===String(id));if(!item)return;item.qty=Math.max(1,Math.floor(Number(value)||1));saveCart();renderCart();};
+window.removeCartItem=id=>{cart=cart.filter(x=>String(x.id)!==String(id));saveCart();renderCart();};
+function renderCart(){
+cart=cart.filter(item=>products.some(p=>String(p.id)===String(item.id)));saveCart();
+const items=cart.map(item=>({item,p:products.find(p=>String(p.id)===String(item.id))}));
+let totalCash=0,totalCard=0,totalM2=0;
+items.forEach(({item,p})=>{const m=Number(p.boxm2||0)*Number(item.qty||1);totalM2+=m;totalCash+=m*Number(p.cash||0);if(p.card)totalCard+=m*Number(p.card);});
+let html='<div class="panel"><div class="adminhead"><h2 style="margin:0">Meu carrinho</h2><button class="secondary" onclick="show(\'catalog\')">Continuar comprando</button></div><hr>';
+if(!items.length){html+='<div class="empty">Seu carrinho está vazio. Volte ao catálogo para adicionar pisos.</div>';}
+else{
+items.forEach(({item,p})=>{const line=Number(p.boxm2)*Number(item.qty)*Number(p.cash);html+='<div class="cartitem"><div><b>'+esc(p.name)+'</b><div class="note">Ref. '+esc(p.ref)+' • '+esc(p.size)+' • '+Number(p.boxm2).toLocaleString('pt-BR')+' m²/caixa</div><div class="note">'+money(line)+' à vista</div></div><div><label class="note" for="qty-'+p.id+'">Caixas</label><input class="cartqty" id="qty-'+p.id+'" type="number" min="1" step="1" value="'+item.qty+'" onchange="changeCartQty(\''+p.id+'\',this.value)"><button class="danger" style="margin-top:6px;width:92px;padding:8px" onclick="removeCartItem(\''+p.id+'\')">Remover</button></div></div>';});
+html+='<hr><div class="note">Metragem total: <b>'+totalM2.toLocaleString('pt-BR',{maximumFractionDigits:2})+' m²</b></div><div class="carttotal">Total estimado à vista: '+money(totalCash)+'</div>';
+if(items.some(x=>x.p.card))html+='<div class="note">Total estimado no cartão: '+money(totalCard)+'</div>';
+html+='<p class="note">Valores estimados, sujeitos à confirmação de disponibilidade e condições pela loja.</p><button class="gold" style="width:100%" onclick="sendCartWhatsApp()">Enviar carrinho pelo WhatsApp</button>';
+}
+html+='</div>';$('cart').innerHTML=html;
+}
+window.sendCartWhatsApp=()=>{
+const items=cart.map(item=>({item,p:products.find(p=>String(p.id)===String(item.id))})).filter(x=>x.p);
+if(!items.length){alert('Adicione pelo menos um piso ao carrinho.');return;}
+let total=0;const lines=['Olá! Gostaria de fazer este pedido pelo catálogo do Depósito do Armandinho:',''];
+items.forEach(({item,p},i)=>{const m=Number(p.boxm2||0)*Number(item.qty||1);const value=m*Number(p.cash||0);total+=value;lines.push((i+1)+') '+p.name,'Referência: '+p.ref,'Tamanho: '+(p.size||'não informado'),'Quantidade: '+item.qty+' caixa(s)','Metragem: '+m.toLocaleString('pt-BR')+' m²','Valor estimado à vista: '+money(value),'');});
+lines.push('Metragem total: '+items.reduce((n,x)=>n+Number(x.p.boxm2||0)*Number(x.item.qty||1),0).toLocaleString('pt-BR')+' m²','Total estimado à vista: '+money(total),'Por favor, confirme disponibilidade e valor final.');
+window.open('https://wa.me/'+WA+'?text='+encodeURIComponent(lines.join('\n')),'_blank');
+};
+$('cartBtn').onclick=showCart;updateCartCount();
 
 window.sendWhatsAppOrder=id=>{
 const p=products.find(x=>String(x.id)===String(id));
