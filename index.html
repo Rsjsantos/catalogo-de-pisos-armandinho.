@@ -533,7 +533,7 @@ const msg=[
 p.name+' • Ref. '+p.ref,
 requestedM2.toLocaleString('pt-BR')+' m² | '+qty+' caixa(s)',
 'Total: '+money(totalCash)+' à vista'+(totalCard!==null?' | '+money(totalCard)+' no cartão':'')
-].join('\\n');
+].join('\n');
 window.open('https://wa.me/'+WA+'?text='+encodeURIComponent(msg),'_blank');
 };
 
