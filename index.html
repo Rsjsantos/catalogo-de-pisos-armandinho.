@@ -513,9 +513,9 @@ html+='</div>';$('cart').innerHTML=html;
 window.sendCartWhatsApp=()=>{
 const items=cart.map(item=>({item,p:products.find(p=>String(p.id)===String(item.id))})).filter(x=>x.p);
 if(!items.length){alert('Adicione pelo menos um piso ao carrinho.');return;}
-let total=0;const lines=['Olá! Gostaria de fazer este pedido pelo catálogo do Depósito do Armandinho:',''];
-items.forEach(({item,p},i)=>{const m=Number(p.boxm2||0)*Number(item.qty||1);const value=m*Number(p.cash||0);total+=value;lines.push((i+1)+') '+p.name,'Referência: '+p.ref,'Tamanho: '+(p.size||'não informado'),'Metragem solicitada: '+Number(item.desiredM2||m).toLocaleString('pt-BR')+' m²','Quantidade calculada: '+item.qty+' caixa(s)','Metragem fornecida pelas caixas: '+m.toLocaleString('pt-BR')+' m²','Valor estimado à vista: '+money(value),'');});
-lines.push('Metragem total: '+items.reduce((n,x)=>n+Number(x.p.boxm2||0)*Number(x.item.qty||1),0).toLocaleString('pt-BR')+' m²','Total estimado à vista: '+money(total),'Por favor, confirme disponibilidade e valor final.');
+let total=0,totalCard=0;const lines=['Olá! Quero fazer este pedido:',''];
+items.forEach(({item,p},i)=>{const m=Number(p.boxm2||0)*Number(item.qty||1);const value=m*Number(p.cash||0);total+=value;if(p.card)totalCard+=m*Number(p.card);lines.push((i+1)+'. '+p.name+' (Ref. '+p.ref+')','Metragem: '+Number(item.desiredM2||m).toLocaleString('pt-BR')+' m² • '+item.qty+' caixa(s)');});
+lines.push('Total à vista: '+money(total));if(items.some(x=>x.p.card))lines.push('Total no cartão: '+money(totalCard));lines.push('Pode confirmar disponibilidade?');
 window.open('https://wa.me/'+WA+'?text='+encodeURIComponent(lines.join('\n')),'_blank');
 };
 $('cartBtn').onclick=showCart;updateCartCount();
@@ -529,17 +529,13 @@ const totalM2=qty*Number(p.boxm2||0);
 const totalCash=totalM2*Number(p.cash||0);
 const totalCard=p.card?totalM2*Number(p.card):null;
 const msg=[
-'Olá! Gostaria de fazer um pedido pelo catálogo do Depósito do Armandinho:',
-'Produto: '+p.name,
-'Referência: '+p.ref,
-'Tamanho: '+(p.size||'não informado'),
-'Metragem solicitada: '+requestedM2.toLocaleString('pt-BR')+' m²',
-'Quantidade calculada: '+qty+' caixa(s)',
-'Metragem fornecida pelas caixas: '+totalM2.toLocaleString('pt-BR')+' m²',
-'Valor estimado à vista: '+money(totalCash),
-...(totalCard!==null?['Valor estimado no cartão: '+money(totalCard)]:[]),
-'Por favor, confirme disponibilidade e valor final.'
-].join('\n');
+'Olá! Quero este piso:',
+p.name+' (Ref. '+p.ref+')',
+'Metragem: '+requestedM2.toLocaleString('pt-BR')+' m² • '+qty+' caixa(s)',
+'Total à vista: '+money(totalCash),
+...(totalCard!==null?['Total no cartão: '+money(totalCard)]:[]),
+'Pode confirmar disponibilidade?'
+].join('\\n');
 window.open('https://wa.me/'+WA+'?text='+encodeURIComponent(msg),'_blank');
 };
 
