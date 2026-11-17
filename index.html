@@ -529,12 +529,10 @@ const totalM2=qty*Number(p.boxm2||0);
 const totalCash=totalM2*Number(p.cash||0);
 const totalCard=p.card?totalM2*Number(p.card):null;
 const msg=[
-'Olá! Quero este piso:',
-p.name+' (Ref. '+p.ref+')',
-'Metragem: '+requestedM2.toLocaleString('pt-BR')+' m² • '+qty+' caixa(s)',
-'Total à vista: '+money(totalCash),
-...(totalCard!==null?['Total no cartão: '+money(totalCard)]:[]),
-'Pode confirmar disponibilidade?'
+'Olá! Tenho interesse neste piso:',
+p.name+' • Ref. '+p.ref,
+requestedM2.toLocaleString('pt-BR')+' m² | '+qty+' caixa(s)',
+'Total: '+money(totalCash)+' à vista'+(totalCard!==null?' | '+money(totalCard)+' no cartão':'')
 ].join('\\n');
 window.open('https://wa.me/'+WA+'?text='+encodeURIComponent(msg),'_blank');
 };
